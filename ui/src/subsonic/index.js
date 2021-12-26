@@ -65,6 +65,7 @@ const getArtistInfo = (id) => {
   return httpClient(url('getArtistInfo', id))
 }
 
+
 const getAlbumInfo = (id) => {
   return httpClient(url('getAlbumInfo', id))
 }
@@ -77,6 +78,11 @@ const streamUrl = (id, options) => {
     })
   )
 }
+
+const getTopSongs = (artistName, id) => {
+  return httpClient(url('getTopSongs', id, { artist: artistName }))
+}
+
 
 export default {
   url,
@@ -92,4 +98,5 @@ export default {
   streamUrl,
   getAlbumInfo,
   getArtistInfo,
+  getTopSongs,
 }
