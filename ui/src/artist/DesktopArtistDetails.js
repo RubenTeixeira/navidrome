@@ -113,10 +113,7 @@ const DesktopArtistDetails = ({
 
   let ids = []
 
-  topSong &&
-    topSong.map((sng) => {
-      ids.push(sng.id)
-    })
+  topSong && topSong.map((sng) => ids.push(sng.id))
 
   return (
     <div className={classes.root}>
