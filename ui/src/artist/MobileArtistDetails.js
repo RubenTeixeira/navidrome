@@ -7,6 +7,7 @@ import config from '../config'
 import { LoveButton, RatingField } from '../common'
 import Lightbox from 'react-image-lightbox'
 import subsonic from '../subsonic'
+import { TopSongs } from './DesktopArtistDetails'
 
 const useStyles = makeStyles(
   (theme) => ({
@@ -71,12 +72,25 @@ const useStyles = makeStyles(
     artistName: {
       wordBreak: 'break-word',
     },
+    topSong: {
+      flexDirection: 'column',
+      '& > :first-child': {
+        display: 'none!important',
+      },
+    },
   }),
   { name: 'NDMobileArtistDetails' }
 )
 
-const MobileArtistDetails = ({ artistInfo, biography, record }) => {
-  const img = subsonic.getCoverArtUrl(record)
+
+const MobileArtistDetails = ({
+  img,
+  artistInfo,
+  biography,
+  record,
+  topSong,
+  showContext,
+}) => {
   const [expanded, setExpanded] = useState(false)
   const classes = useStyles({ img, expanded })
   const title = record.name
@@ -145,6 +159,9 @@ const MobileArtistDetails = ({ artistInfo, biography, record }) => {
           onCloseRequest={handleCloseLightbox}
         />
       )}
+      <div className={classes.topSong}>
+        <TopSongs showContext={showContext} topSong={topSong} record={record} />
+      </div>
     </>
   )
 }
