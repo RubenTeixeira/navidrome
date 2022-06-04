@@ -155,4 +155,39 @@ const DesktopArtistDetails = ({ artistInfo, record, biography }) => {
   )
 }
 
+
+export const TopSongs = ({ showContext, topSong, record }) => {
+  const classes = useStyles()
+  let ids = []
+  record.isTopSongs = true
+
+  topSong && topSong.map((sng) => ids.push(sng.id))
+  return (
+    <>
+      {record && (
+        <ReferenceManyField
+          {...showContext}
+          addLabel={false}
+          reference="song"
+          target="artist_id"
+          sort={{ field: 'title', order: 'ASC' }}
+          perPage={0}
+          filter={{ id: ids }}
+          pagination={null}
+        >
+          <AlbumSongs
+            resource={'album'}
+            exporter={false}
+            album={record}
+            show={false}
+            actions={
+              <AlbumActions className={classes.albumActions} record={record} />
+            }
+          />
+        </ReferenceManyField>
+      )}
+    </>
+  )
+}
+
 export default DesktopArtistDetails
