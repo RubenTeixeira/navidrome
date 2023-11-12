@@ -13,6 +13,7 @@ import (
 	"github.com/navidrome/navidrome/model"
 	"github.com/navidrome/navidrome/scanner/metadata"
 	"github.com/navidrome/navidrome/utils"
+	"golang.org/x/exp/slices"
 )
 
 type mediaFileMapper struct {
@@ -30,16 +31,7 @@ func newMediaFileMapper(rootFolder string, genres model.GenreRepository) *mediaF
 // TODO Move most of these mapping functions to setters in the model.MediaFile
 func (s mediaFileMapper) toMediaFile(md metadata.Tags) model.MediaFile {
 	mf := &model.MediaFile{}
-	mf.ID = s.trackID(md)
-	mf.Year, mf.Date, mf.OriginalYear, mf.OriginalDate, mf.ReleaseYear, mf.ReleaseDate = s.mapDates(md)
-	mf.Title = s.mapTrackTitle(md)
-	mf.Album = s.mapAlbumName(md)
-	mf.Artist, mf.AlbumArtist, mf.ArtistID, mf.AlbumArtistID, mf.AllArtistIDs = s.mapArtists(md)
-	mf.Genre, mf.Genres = s.mapGenres(md.Genres())
-	mf.Compilation = md.Compilation()
-	mf.TrackNumber, _ = md.TrackNumber()
-	mf.DiscNumber, _ = md.DiscNumber()
-	mf.DiscSubtitle = md.DiscSubtitle()
+	// file properties
 	mf.Duration = md.Duration()
 	mf.BitRate = md.BitRate()
 	mf.Channels = md.Channels()
@@ -47,6 +39,22 @@ func (s mediaFileMapper) toMediaFile(md metadata.Tags) model.MediaFile {
 	mf.Suffix = md.Suffix()
 	mf.Size = md.Size()
 	mf.HasCoverArt = md.HasPicture()
+	mf.CreatedAt = md.BirthTime()
+	mf.UpdatedAt = md.ModificationTime()
+	// classification
+	mf.Classical = s.detectClassical(md)
+	mf.Compilation = md.Compilation()
+	// track, disc, album
+	mf.TrackNumber, _ = md.TrackNumber()
+	mf.Title, mf.WorkTitle = s.mapTrackTitle(md, mf.Classical)
+	mf.DiscNumber, _ = md.DiscNumber()
+	mf.DiscSubtitle = md.DiscSubtitle()
+	mf.Album = s.mapAlbumName(md)
+	// dates
+	mf.Year, mf.Date, mf.OriginalYear, mf.OriginalDate, mf.ReleaseYear, mf.ReleaseDate = s.mapDates(md)
+	// artists
+	mf.Artist, mf.AlbumArtist, mf.ArtistID, mf.AlbumArtistID, mf.AllArtistIDs = s.mapArtists(md, mf.Classical)
+	// sort+order names
 	mf.SortTitle = md.SortTitle()
 	mf.SortAlbumName = md.SortAlbum()
 	mf.SortArtistName = md.SortArtist()
@@ -55,7 +63,13 @@ func (s mediaFileMapper) toMediaFile(md metadata.Tags) model.MediaFile {
 	mf.OrderAlbumName = sanitizeFieldForSorting(mf.Album)
 	mf.OrderArtistName = sanitizeFieldForSorting(mf.Artist)
 	mf.OrderAlbumArtistName = sanitizeFieldForSorting(mf.AlbumArtist)
+	// additional metadata
+	mf.Genre, mf.Genres = s.mapGenres(md.Genres())
 	mf.CatalogNum = md.CatalogNum()
+	mf.Lyrics = utils.SanitizeText(md.Lyrics())
+	mf.Bpm = md.Bpm()
+	mf.Comment = utils.SanitizeText(md.Comment())
+	// MusicBrainz tags
 	mf.MbzRecordingID = md.MbzRecordingID()
 	mf.MbzReleaseTrackID = md.MbzReleaseTrackID()
 	mf.MbzAlbumID = md.MbzAlbumID()
@@ -63,15 +77,13 @@ func (s mediaFileMapper) toMediaFile(md metadata.Tags) model.MediaFile {
 	mf.MbzAlbumArtistID = md.MbzAlbumArtistID()
 	mf.MbzAlbumType = md.MbzAlbumType()
 	mf.MbzAlbumComment = md.MbzAlbumComment()
+	// ReplayGain tags
 	mf.RGAlbumGain = md.RGAlbumGain()
 	mf.RGAlbumPeak = md.RGAlbumPeak()
 	mf.RGTrackGain = md.RGTrackGain()
 	mf.RGTrackPeak = md.RGTrackPeak()
-	mf.Comment = utils.SanitizeText(md.Comment())
-	mf.Lyrics = utils.SanitizeText(md.Lyrics())
-	mf.Bpm = md.Bpm()
-	mf.CreatedAt = md.BirthTime()
-	mf.UpdatedAt = md.ModificationTime()
+	// generate track & album IDs
+	mf.ID = s.trackID(md)
 	if conf.Server.Scanner.GroupAlbumReleases {
 		mf.AlbumID = s.albumID(mf.Album, mf.AlbumArtistID)
 	} else {
@@ -88,24 +100,56 @@ func sanitizeFieldForSorting(originalValue string) string {
 	return utils.NoArticle(v)
 }
 
-func (s mediaFileMapper) mapTrackTitle(md metadata.Tags) string {
-	if md.Title() == "" {
+func (s mediaFileMapper) mapTrackTitle(md metadata.Tags, classical bool) (string, string) {
+	title := md.Title()
+	//subTitle := md.SubTitle()
+	work := md.Work()
+	movementName := md.MovementName()
+	composers := md.Composers()
+	arrangers := md.Arrangers()
+	if classical {
+		if movementName != "" {
+			movementIndex, _ := md.MovementNumber()
+			if movementIndex > 0 {
+				title = strings.Join([]string{utils.IntToRoman(movementIndex), movementName}, ". ")
+			}
+		}
+		if len(composers) > 0 || len(arrangers) > 0 {
+			people := append(composers, arrangers...)
+			peopleText := strings.Join(people, " · ")
+			work = strings.Join([]string{work, peopleText}, " ♫ ")
+		}
+	}
+
+	if title == "" {
 		s := strings.TrimPrefix(md.FilePath(), s.rootFolder+string(os.PathSeparator))
 		e := filepath.Ext(s)
-		return strings.TrimSuffix(s, e)
+		return strings.TrimSuffix(s, e), work
 	}
-	return md.Title()
+
+	return title, work
 }
 
-func (s mediaFileMapper) mapArtists(md metadata.Tags) (string, string, string, string, string) {
+func (s mediaFileMapper) mapArtists(md metadata.Tags, classical bool) (string, string, string, string, string) {
 	// note: to be fixed after multi-artists database refactoring
 	artists := utils.SanitizeProblematicChars(md.Artist())
 	albumArtists := utils.SanitizeProblematicChars(md.AlbumArtist())
-	var artistsWithoutRemixers []string
+	var artistsWithoutAdditionals []string
 	if conf.Server.Scanner.RemixerToArtist {
-		artistsWithoutRemixers = artists
+		artistsWithoutAdditionals = artists
 		remixers := utils.SanitizeProblematicChars(md.Remixer())
 		artists = append(artists, remixers...)
+	}
+
+	if classical {
+		artistsWithoutAdditionals = artists
+		composers := utils.SanitizeProblematicChars(md.Composers())
+		artists = append(artists, composers...)
+		conductors := utils.SanitizeProblematicChars(md.Conductors())
+		artists = append(artists, conductors...)
+		performers := utils.SanitizeProblematicChars(md.Performers())
+		slices.Sort(performers)
+		artists = append(artists, performers...)
 	}
 
 	if !conf.Server.Scanner.MultipleArtists {
@@ -140,9 +184,9 @@ func (s mediaFileMapper) mapArtists(md metadata.Tags) (string, string, string, s
 		albumArtistName = albumArtists[0]
 		albumArtistID = fmt.Sprintf("%x", md5.Sum([]byte(strings.ToLower(albumArtistName))))
 	default:
-		if conf.Server.Scanner.RemixerToArtist {
+		if conf.Server.Scanner.RemixerToArtist || classical {
 			//if there's no album artist, use track artist without remixer!
-			artists = artistsWithoutRemixers
+			artists = artistsWithoutAdditionals
 		}
 		artists = utils.RemoveDuplicateStr(artists)
 		albumArtistName = strings.Join(artists, " · ")
@@ -215,4 +259,21 @@ func (s mediaFileMapper) mapDates(md metadata.Tags) (int, string, int, string, i
 		}
 	}
 	return year, date, originalYear, originalDate, releaseYear, releaseDate
+}
+
+func (s mediaFileMapper) detectClassical(md metadata.Tags) bool {
+	// the tag "is_classical" or "showmovement" forces a track to be Classical
+	// autodetect criteria:
+	// - if Movement + Composer are both populated -> true
+	// - if one of the Genres is "Classical" -> true
+	classical := md.Classical()
+	if !classical && conf.Server.Scanner.AutoDetectClassical {
+		if md.MovementName() != "" && len(md.Composers()) > 0 {
+			return true
+		}
+		if slices.Contains(md.Genres(), "Classical") {
+			return true
+		}
+	}
+	return classical
 }
