@@ -171,7 +171,6 @@ const AlbumSongs = (props) => {
             rowClick={(id) => dispatch(playTracks(data, ids, id))}
             {...props}
             hasBulkActions={true}
-            showWorkTitles={true}
             showDiscSubtitles={true}
             showReleaseDivider={true}
             contextAlwaysVisible={!isDesktop}
