@@ -22,7 +22,6 @@ type MediaFile struct {
 	ID                   string  `structs:"id" json:"id"            orm:"pk;column(id)"`
 	Path                 string  `structs:"path" json:"path"`
 	Title                string  `structs:"title" json:"title"`
-	WorkTitle            string  `structs:"work_title" json:"workTitle"`
 	Album                string  `structs:"album" json:"album"`
 	ArtistID             string  `structs:"artist_id" json:"artistId"      orm:"pk;column(artist_id)"`
 	Artist               string  `structs:"artist" json:"artist"`
@@ -57,7 +56,6 @@ type MediaFile struct {
 	OrderArtistName      string  `structs:"order_artist_name" json:"orderArtistName"`
 	OrderAlbumArtistName string  `structs:"order_album_artist_name" json:"orderAlbumArtistName"`
 	Compilation          bool    `structs:"compilation" json:"compilation"`
-	Classical            bool    `structs:"classical" json:"classical"`
 	Comment              string  `structs:"comment" json:"comment,omitempty"`
 	Lyrics               string  `structs:"lyrics" json:"lyrics,omitempty"`
 	Bpm                  int     `structs:"bpm" json:"bpm,omitempty"`
@@ -112,7 +110,6 @@ func (mfs MediaFiles) Dirs() []string {
 // It assumes all mediafiles have the same Album, or else results are unpredictable.
 func (mfs MediaFiles) ToAlbum() Album {
 	a := Album{SongCount: len(mfs)}
-	a.Classical = true
 	var fullText []string
 	var albumArtistIds, allArtistIdsInSong, allArtistIdsInAlbum []string
 	var artistText, albumArtistText, sortArtistText, sortAlbumArtistText string
@@ -145,7 +142,6 @@ func (mfs MediaFiles) ToAlbum() Album {
 		// Calculated attributes based on aggregations
 		a.Duration += m.Duration
 		a.Size += m.Size
-		a.Classical = (a.Classical && m.Classical)
 		years = append(years, m.Year)
 		dates = append(dates, m.Date)
 		originalYears = append(originalYears, m.OriginalYear)
