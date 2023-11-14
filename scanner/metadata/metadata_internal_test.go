@@ -61,7 +61,7 @@ var _ = Describe("Tags", func() {
 		It("returns values from all tag names", func() {
 			md := &Tags{}
 			md.tags = map[string][]string{
-				"genre": {"Rock ;  Pop", "New Wave", " Rock "},
+				"genre": {"Rock", "Pop", "New Wave"},
 			}
 
 			Expect(md.Genres()).To(ConsistOf("Rock", "Pop", "New Wave"))

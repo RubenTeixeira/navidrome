@@ -13,7 +13,6 @@ var _ = Describe("Tags", func() {
 	Context("Extract", func() {
 		BeforeEach(func() {
 			conf.Server.Scanner.Extractor = "taglib"
-			conf.Server.Scanner.MultipleArtists = true
 		})
 
 		It("correctly parses metadata from all files in folder", func() {
@@ -24,10 +23,10 @@ var _ = Describe("Tags", func() {
 			m := mds["tests/fixtures/test.mp3"]
 			Expect(m.Title()).To(Equal("Song"))
 			Expect(m.Album()).To(Equal("Album"))
-			Expect(m.Artist()).To(Equal([]string{"Alice", "Bob"}))
-			Expect(m.AlbumArtist()).To(Equal([]string{"Alice", "Bob"}))
+			Expect(m.Artist()).To(Equal("Artist"))
+			Expect(m.AlbumArtist()).To(Equal("Album Artist"))
 			Expect(m.Compilation()).To(BeTrue())
-			Expect(m.Genres()).To(Equal([]string{"Rock", "Electronic", "Pop"}))
+			Expect(m.Genres()).To(Equal([]string{"Rock"}))
 			y, d := m.Date()
 			Expect(y).To(Equal(2014))
 			Expect(d).To(Equal("2014-05-21"))
@@ -49,7 +48,7 @@ var _ = Describe("Tags", func() {
 			Expect(m.Channels()).To(Equal(2))
 			Expect(m.FilePath()).To(Equal("tests/fixtures/test.mp3"))
 			Expect(m.Suffix()).To(Equal("mp3"))
-			Expect(m.Size()).To(Equal(int64(51748)))
+			Expect(m.Size()).To(Equal(int64(51876)))
 			Expect(m.RGAlbumGain()).To(Equal(3.21518))
 			Expect(m.RGAlbumPeak()).To(Equal(0.9125))
 			Expect(m.RGTrackGain()).To(Equal(-1.48))
