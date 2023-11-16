@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/navidrome/navidrome/conf"
 	"github.com/navidrome/navidrome/consts"
@@ -48,8 +47,7 @@ func (l *listenBrainzAgent) AgentName() string {
 func (l *listenBrainzAgent) formatListen(track *model.MediaFile) listenInfo {
 	li := listenInfo{
 		TrackMetadata: trackMetadata{
-			// note: to be changed after multi-artist database refactoring
-			ArtistName:  strings.Split(track.Artist, " · ")[0],
+			ArtistName:  track.Artist,
 			TrackName:   track.Title,
 			ReleaseName: track.Album,
 			AdditionalInfo: additionalInfo{

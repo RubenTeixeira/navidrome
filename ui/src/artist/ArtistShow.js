@@ -13,11 +13,9 @@ import MobileArtistDetails from './MobileArtistDetails'
 import DesktopArtistDetails from './DesktopArtistDetails'
 
 const ArtistDetails = (props) => {
-  const showContext = useShowContext(props)
   const record = useRecordContext(props)
   const isDesktop = useMediaQuery((theme) => theme.breakpoints.up('sm'))
   const [artistInfo, setArtistInfo] = useState()
-  const [topSong, setTopSong] = useState()
 
   const biography =
     artistInfo?.biography?.replace(new RegExp('<.*>', 'g'), '') ||
@@ -35,19 +33,7 @@ const ArtistDetails = (props) => {
       .catch((e) => {
         console.error('error on artist page', e)
       })
-
-    subsonic
-      .getTopSongs(record.name, record.id)
-      .then((resp) => resp.json['subsonic-response'])
-      .then((data) => {
-        if (data.status === 'ok') {
-          setTopSong(data.topSongs.song)
-        }
-      })
-      .catch((e) => {
-        console.error('error on artist page', e)
-      })
-  }, [record.id, record.name])
+  }, [record.id])
 
   const component = isDesktop ? DesktopArtistDetails : MobileArtistDetails
   return (
@@ -56,8 +42,6 @@ const ArtistDetails = (props) => {
         artistInfo,
         record,
         biography,
-        topSong,
-        showContext,
       })}
     </>
   )
