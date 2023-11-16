@@ -13,9 +13,11 @@ import MobileArtistDetails from './MobileArtistDetails'
 import DesktopArtistDetails from './DesktopArtistDetails'
 
 const ArtistDetails = (props) => {
+  const showContext = useShowContext(props)
   const record = useRecordContext(props)
   const isDesktop = useMediaQuery((theme) => theme.breakpoints.up('sm'))
   const [artistInfo, setArtistInfo] = useState()
+  const [topSong, setTopSong] = useState()
 
   const biography =
     artistInfo?.biography?.replace(new RegExp('<.*>', 'g'), '') ||
@@ -33,7 +35,19 @@ const ArtistDetails = (props) => {
       .catch((e) => {
         console.error('error on artist page', e)
       })
-  }, [record.id])
+
+    subsonic
+      .getTopSongs(record.name, record.id)
+      .then((resp) => resp.json['subsonic-response'])
+      .then((data) => {
+        if (data.status === 'ok') {
+          setTopSong(data.topSongs.song)
+        }
+      })
+      .catch((e) => {
+        console.error('error on artist page', e)
+      })
+  }, [record.id, record.name])
 
   const component = isDesktop ? DesktopArtistDetails : MobileArtistDetails
   return (
@@ -42,6 +56,8 @@ const ArtistDetails = (props) => {
         artistInfo,
         record,
         biography,
+        topSong,
+        showContext,
       })}
     </>
   )
@@ -60,10 +76,7 @@ const AlbumShowLayout = (props) => {
           addLabel={false}
           reference="album"
           target="artist_id"
-          sort={{
-            field: 'match_album_artist desc,max_year asc,date asc',
-            order: 'ASC',
-          }}
+          sort={{ field: 'max_year asc,date asc', order: 'ASC' }}
           filter={{ artist_id: record?.id }}
           perPage={0}
           pagination={null}

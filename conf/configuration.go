@@ -106,7 +106,10 @@ type configOptions struct {
 type scannerOptions struct {
 	Extractor          string
 	GenreSeparators    string
+	MultipleArtists    bool
+	ArtistSeparators   string
 	GroupAlbumReleases bool
+	RemixerToArtist    bool
 }
 
 type lastfmOptions struct {
@@ -328,8 +331,11 @@ func init() {
 	viper.SetDefault("jukebox.default", "")
 
 	viper.SetDefault("scanner.extractor", consts.DefaultScannerExtractor)
+	viper.SetDefault("scanner.multipleartists", true)
 	viper.SetDefault("scanner.genreseparators", ";/,")
+	viper.SetDefault("scanner.artistseparators", ";")
 	viper.SetDefault("scanner.groupalbumreleases", false)
+	viper.SetDefault("scanner.remixertoartist", true)
 
 	viper.SetDefault("agents", "lastfm,spotify")
 	viper.SetDefault("lastfm.enabled", true)
