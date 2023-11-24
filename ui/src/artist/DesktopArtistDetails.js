@@ -203,11 +203,9 @@ const DesktopArtistDetails = ({
           </AccordionDetails>
         </Accordion>
       )}
-
     </div>
   )
 }
-
 
 export const TopSongs = ({ showContext, topSong, record }) => {
   const classes = useStyles()

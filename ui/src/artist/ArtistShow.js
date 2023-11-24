@@ -49,7 +49,6 @@ const ArtistDetails = (props) => {
       })
   }, [record.name, record.id])
 
-
   const component = isDesktop ? DesktopArtistDetails : MobileArtistDetails
   return (
     <>

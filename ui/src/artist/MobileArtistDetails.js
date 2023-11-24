@@ -82,7 +82,6 @@ const useStyles = makeStyles(
   { name: 'NDMobileArtistDetails' }
 )
 
-
 const MobileArtistDetails = ({
   img,
   artistInfo,
