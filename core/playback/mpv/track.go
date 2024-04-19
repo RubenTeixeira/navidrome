@@ -33,7 +33,7 @@ func NewTrack(playbackDoneChannel chan bool, deviceName string, mf model.MediaFi
 
 	tmpSocketName := socketName("mpv-ctrl-", ".socket")
 
-	args := createMPVCommand(mpvComdTemplate, deviceName, mf.Path, tmpSocketName)
+	args := createMPVCommand(deviceName, mf.Path, tmpSocketName)
 	exe, err := start(args)
 	if err != nil {
 		log.Error("Error starting mpv process", err)
@@ -99,6 +99,31 @@ func (t *MpvTrack) Pause() {
 	err := t.Conn.Set("pause", true)
 	if err != nil {
 		log.Error("Error pausing track", "track", t, err)
+	}
+}
+
+func (t *MpvTrack) Close() {
+	log.Debug("Closing resources", "track", t)
+	t.CloseCalled = true
+	// trying to shutdown mpv process using socket
+	if t.isSocketFilePresent() {
+		log.Debug("sending shutdown command")
+		_, err := t.Conn.Call("quit")
+		if err != nil {
+			log.Error("Error sending quit command to mpv-ipc socket", err)
+
+			if t.Exe != nil {
+				log.Debug("cancelling executor")
+				err = t.Exe.Cancel()
+				if err != nil {
+					log.Error("Error canceling executor", err)
+				}
+			}
+		}
+	}
+
+	if t.isSocketFilePresent() {
+		removeSocket(t.IPCSocketName)
 	}
 }
 
