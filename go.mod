@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
+	github.com/RaveNoX/go-jsoncommentstrip v1.0.0
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/deluan/rest v0.0.0-20211102003136-6260bc399cbf
 	github.com/deluan/sanitize v0.0.0-20230310221930-6e18967d9fc1
@@ -32,7 +33,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/mileusna/useragent v1.3.4
 	github.com/onsi/ginkgo/v2 v2.17.1
-	github.com/onsi/gomega v1.32.0
+	github.com/onsi/gomega v1.33.0
 	github.com/pelletier/go-toml/v2 v2.2.1
 	github.com/pocketbase/dbx v1.10.1
 	github.com/pressly/goose/v3 v3.19.2
