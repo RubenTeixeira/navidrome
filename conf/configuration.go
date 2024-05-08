@@ -44,6 +44,7 @@ type configOptions struct {
 	EnableMediaFileCoverArt      bool
 	TranscodingCacheSize         string
 	ImageCacheSize               string
+	AlbumPlayCountMode           string
 	EnableArtworkPrecache        bool
 	AutoImportPlaylists          bool
 	PlaylistsPath                string
@@ -79,6 +80,7 @@ type configOptions struct {
 	PasswordEncryptionKey        string
 	ReverseProxyUserHeader       string
 	ReverseProxyWhitelist        string
+	HTTPSecurityHeaders          secureOptions
 	Prometheus                   prometheusOptions
 	Scanner                      scannerOptions
 	Jukebox                      jukeboxOptions
@@ -129,6 +131,10 @@ type listenBrainzOptions struct {
 	BaseURL string
 }
 
+type secureOptions struct {
+	CustomFrameOptionsValue string
+}
+
 type prometheusOptions struct {
 	Enabled     bool
 	MetricsPath string
@@ -137,9 +143,10 @@ type prometheusOptions struct {
 type AudioDeviceDefinition []string
 
 type jukeboxOptions struct {
-	Enabled bool
-	Devices []AudioDeviceDefinition
-	Default string
+	Enabled   bool
+	Devices   []AudioDeviceDefinition
+	Default   string
+	AdminOnly bool
 }
 
 var (
@@ -289,6 +296,7 @@ func init() {
 	viper.SetDefault("enabletranscodingconfig", false)
 	viper.SetDefault("transcodingcachesize", "100MB")
 	viper.SetDefault("imagecachesize", "100MB")
+	viper.SetDefault("albumplaycountmode", consts.AlbumPlayCountModeAbsolute)
 	viper.SetDefault("enableartworkprecache", true)
 	viper.SetDefault("autoimportplaylists", true)
 	viper.SetDefault("playlistspath", consts.DefaultPlaylistsPath)
@@ -333,6 +341,7 @@ func init() {
 	viper.SetDefault("jukebox.enabled", false)
 	viper.SetDefault("jukebox.devices", []AudioDeviceDefinition{})
 	viper.SetDefault("jukebox.default", "")
+	viper.SetDefault("jukebox.adminonly", true)
 
 	viper.SetDefault("scanner.extractor", consts.DefaultScannerExtractor)
 	viper.SetDefault("scanner.genreseparators", ";/,")
@@ -347,6 +356,8 @@ func init() {
 	viper.SetDefault("spotify.secret", "")
 	viper.SetDefault("listenbrainz.enabled", true)
 	viper.SetDefault("listenbrainz.baseurl", "https://api.listenbrainz.org/1/")
+
+	viper.SetDefault("httpsecurityheaders.customframeoptionsvalue", "DENY")
 
 	// DevFlags. These are used to enable/disable debugging and incomplete features
 	viper.SetDefault("devlogsourceline", false)
