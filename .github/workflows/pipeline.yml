@@ -94,7 +94,7 @@ jobs:
     needs: [js, git-version]
     strategy:
       matrix:
-        platform: [ linux/arm/v7 ]
+        platform: [ linux/arm64 ]
     runs-on: ubuntu-latest
     env:
       IS_LINUX: ${{ startsWith(matrix.platform, 'linux/') && 'true' || 'false' }}
