@@ -57,7 +57,6 @@ type configOptions struct {
 	SearchFullString                bool
 	RecentlyAddedByModTime          bool
 	PreferSortTags                  bool
-	AppendSubtitle                  bool
 	IgnoredArticles                 string
 	IndexGroups                     string
 	FFmpegPath                      string
@@ -129,16 +128,19 @@ type scannerOptions struct {
 	WatcherWait        time.Duration
 	ScanOnStartup      bool
 	Extractor          string
-	GroupAlbumReleases bool // Deprecated: BFR Update docs
+	GenreSeparators    string // Deprecated: Use Tags.genre.Split instead
+	GroupAlbumReleases bool   // Deprecated: Use PID.Album instead
 }
 
 type subsonicOptions struct {
+	AppendSubtitle        bool
 	ArtistParticipations  bool
 	DefaultReportRealPath bool
 	LegacyClients         string
 }
 
 type TagConf struct {
+	Ignore    bool     `yaml:"ignore"`
 	Aliases   []string `yaml:"aliases"`
 	Type      string   `yaml:"type"`
 	MaxLength int      `yaml:"maxLength"`
@@ -307,6 +309,7 @@ func Load(noConfigDump bool) {
 		log.Warn(fmt.Sprintf("Extractor '%s' is not implemented, using 'taglib'", Server.Scanner.Extractor))
 		Server.Scanner.Extractor = consts.DefaultScannerExtractor
 	}
+	logDeprecatedOptions("Scanner.GenreSeparators")
 	logDeprecatedOptions("Scanner.GroupAlbumReleases")
 
 	// Call init hooks
@@ -447,7 +450,6 @@ func init() {
 	viper.SetDefault("searchfullstring", false)
 	viper.SetDefault("recentlyaddedbymodtime", false)
 	viper.SetDefault("prefersorttags", false)
-	viper.SetDefault("appendsubtitle", true)
 	viper.SetDefault("ignoredarticles", "The El La Los Las Le Les Os As O A")
 	viper.SetDefault("indexgroups", "A B C D E F G H I J K L M N O P Q R S T U V W X-Z(XYZ) [Unknown]([)")
 	viper.SetDefault("ffmpegpath", "")
@@ -490,10 +492,12 @@ func init() {
 	viper.SetDefault("scanner.enabled", true)
 	viper.SetDefault("scanner.schedule", "0")
 	viper.SetDefault("scanner.extractor", consts.DefaultScannerExtractor)
-	viper.SetDefault("scanner.groupalbumreleases", false)
 	viper.SetDefault("scanner.watcherwait", consts.DefaultWatcherWait)
 	viper.SetDefault("scanner.scanonstartup", true)
+	viper.SetDefault("scanner.genreseparators", "")
+	viper.SetDefault("scanner.groupalbumreleases", false)
 
+	viper.SetDefault("subsonic.appendsubtitle", true)
 	viper.SetDefault("subsonic.artistparticipations", false)
 	viper.SetDefault("subsonic.defaultreportrealpath", false)
 	viper.SetDefault("subsonic.legacyclients", "DSub")
