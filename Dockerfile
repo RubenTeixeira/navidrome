@@ -61,7 +61,7 @@ COPY --from=ui /build /build
 
 ########################################################################################################################
 ### Build Navidrome binary
-FROM --platform=$BUILDPLATFORM public.ecr.aws/docker/library/golang:1.23-bookworm AS base
+FROM --platform=$BUILDPLATFORM public.ecr.aws/docker/library/golang:1.24-bookworm AS base
 RUN apt-get update && apt-get install -y clang lld
 COPY --from=xx / /
 WORKDIR /workspace
@@ -138,7 +138,6 @@ ENV GODEBUG="asyncpreemptoff=1"
 RUN touch /.nddockerenv
 
 EXPOSE ${ND_PORT}
-HEALTHCHECK CMD wget -O- http://localhost:${ND_PORT}/ping || exit 1
 WORKDIR /app
 
 ENTRYPOINT ["/app/navidrome"]
